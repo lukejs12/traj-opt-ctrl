@@ -1,0 +1,15 @@
+function x_dot = SinglePendulumCartEom(t, x, u, param)
+I2 = param.I2;
+b1 = param.b1;
+b2 = param.b2;
+c2 = param.c2;
+g = param.g;
+m1 = param.m1;
+m2 = param.m2;
+q1 = x(1);
+q1_dot = x(3);
+q2 = x(2);
+q2_dot = x(4);
+x_dot(1:2) = x(3:4);
+x_dot(3:4) = SinglePendulumCart_auto(I2,b1,b2,c2,g,m1,m2,q1_dot,q2,q2_dot,u);
+x_dot = x_dot';

@@ -1,0 +1,6 @@
+Pendulum cart system with distributed pendlum mass and viscous damping on both dof
+
+In order - 
+
+derive_single_pendulum_cart_eom.m - as function title
+pendulum_test - pokes the model and animates as an idiot check

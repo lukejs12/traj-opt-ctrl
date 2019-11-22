@@ -1,0 +1,6 @@
+Cart only system with viscous damping
+
+In order - 
+
+derive_cart_eom.m - as function title
+cart_test - pokes the model and animates as an idiot check

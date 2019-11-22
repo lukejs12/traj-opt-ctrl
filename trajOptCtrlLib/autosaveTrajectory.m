@@ -3,6 +3,8 @@
 str = [sys.name '_' num2str(nPoints) '_' method '_'];
 if cost.T > 0, str = [str num2str(cost.T, 2) 'Tsq_']; end
 if cost.u > 0, str = [str num2str(cost.u, 2) 'usq_']; end
+if cost.accSmooth > 0, str = [str num2str(cost.accSmooth, 2) 'accSmooth_']; end
+if cost.uSmooth > 0, str = [str num2str(cost.uSmooth, 2) 'uSmooth_']; end
 str = [str num2str(uMax) 'uMx'];
 filename = str;
 condition = true;

@@ -1,0 +1,149 @@
+% Test the EOM for the pendulum cart (distributed mass) system
+clear variables
+% x0 = [0 90*pi/180 0 0]';
+x0 = [0 0 0 0]';
+tspan = [0 15];
+p.m1 = 0.24463;
+p.b1 = 3;
+
+p.c2 = 0.13248;
+p.l2 = 0.3;
+p.m2 = 0.09465;
+p.b2 = 0.0035;
+p.I2 = 0.00353067843;
+p.g = 9.81;
+
+% Forcing function
+u = @(t) 3.*sin(.5*2*pi*t);
+% [t, y] = ode45(@(t, x) SinglePendulumCartEom(t, x, u(t), p), tspan, x0);
+sol = ode45(@(t, x) SinglePendulumCartEom(t, x, u(t), p), tspan, x0);
+t = 0:.05:tspan(end);
+T = tspan(end);
+traj = deval(sol, t);
+figure
+plot(t, traj(2, :));%, 'k', t, y(:, 2), 'b')
+% AnimPendulumCart
+
+% Now create controller for this trajectory
+
+disp('Loading system model');
+% [xnom, unom, T, param, tmp] = loadTrajectory('1013.mat');   %, doublePendCart_240_dircol_1Tsq_1usq_50uMx, doublePendCart_150_dircol_1usq_25uMx  doublePendCart_240_dircol_1Tsq_1usq_50uMx
+load('SinglePendulumCartSys.mat', 'sys');
+xnom = traj;
+unom = u(t);
+syms u;
+sys.inputVars = u; % Needed for LQR. Need to resolve better.
+sys.param = p;
+% % Perturb the system properties
+% sys.param.m1 = sys.param.m1 * 1.05;
+% sys.param.b1 = sys.param.b1 * .9;
+% sys.param.I2 = sys.param.I2 * 1.05;
+% sys.param.m2 = sys.param.m2 * .95;
+% sys.param.b2 = sys.param.b2 * 1.2;
+
+%'doublePendCart_120_dircol_10Tsq_0_25usq_40uMx'); % Works
+[~, nPoints] = size(xnom);
+h = T/(nPoints-1);
+% Nominal trajectory time vector
+t0 = linspace(0, T, nPoints);
+
+% Create LQR structure
+% lqr.Q = .1*eye(6);
+% lqr.Q = .0001*diag([1 5 5 1 5 5]);
+% lqr.Q = diag([2 2.5 .05 .1]);
+lqr.Q = diag([2 1 1 1]);
+lqr.R = 1;
+% lqr.Q_f = .5*eye(6);%diag([5 5 5 1 1 1]); %5*eye(sys.nStates);
+% lqr.Q_f = zeros(6, 6);%diag([1 5 5 .5 .5 .5]);
+lqr.Q_f = lqr.Q;
+
+lqr.nSteps = nPoints; % Create a gain for every knot point
+% Get time varying LQR controller
+disp('Calculating finite horizon LQR gains');
+% [lqr, u_cl_fun, x0_p, u0_p, tIdxFun] = tvLqr(sys, lqr, [0 T], xnom, unom);
+[lqr, u_cl_fun, tIdxFun] = tvLqrDirCol(sys, lqr, [0 T], xnom, unom);
+% return;
+% Change initial state
+x_zero = [0 0 0 0];
+% x_zero = [-.5 -30*pi/180 30*pi/180 0 0 0]';
+% % Perturb system physical properties
+% sys.param.b1 = 0.005;
+% sys.param.m1 = sys.param.m1*1.05; 
+% sys.param.b2 = sys.param.b2*1.05;
+% sys.param.m2 = sys.param.m2*1.05;
+% sys.param.b3 = sys.param.b3*1.05;
+% sys.param.m3 = sys.param.m3*1.05;
+
+% sys.param.b
+% ZOH input function
+u_ol = @(t, x) unom(round(t/h) + 1);
+% u_ol = @(t, x) xuOft(
+disp('Simulating open- and closed-loop trajectories of perturbed system');
+
+% Open loop simulation with as many steps as nominal trajectory
+% [t_vect_ol, x_traj_ol, u_traj_ol] = rk4(@(t, x, u) sys.x_dot_fun(t, x, u, sys.param), u_ol, [t0(1) t0(end)], x_zero, nKnotPoints-1);
+ol_sol = ode45(@(t, x) sys.x_dot_fun(t, x, u_ol(t, x), sys.param), [t0(1) t0(end)], x_zero);
+x_traj_ol = deval(ol_sol, t0);
+ 
+% % Closed loop simulation
+% % [t_vect_cl, x_traj_cl, u_traj_cl] = rk4(@(t, x, u) sys.x_dot_fun(t, x, u, sys.param), u_cl_fun, [0 T], x_zero, lqr.nSteps*10);
+% cl_sol = ode45(@(t, x) sys.x_dot_fun(t, x, u_cl_fun(t, x), sys.param), [t0(1) t0(end)], x_zero);
+% x_traj_cl = deval(cl_sol, t0);
+
+% Closed loop test
+
+% Create a controller interface
+disp('Creating pendulum controller interface');
+interface = PendulumController;
+% Home the cart-pendulum system
+disp('Homing system');
+interface.Home();
+% Seek the start point of the trajectory
+disp('Seeking trajectory start point');
+interface.Seek(x0(1));
+
+disp('');
+input('Ready - hit [return] to proceed (system will move)');
+% Enable the motor
+[theta, theta_dot, enabled, homed, estop, limit, t_limit] = interface.sendPacket(interface.CMD_ENABLE, 0);
+i = 1;
+FREQUENCY = 100;
+PERIOD = 1/FREQUENCY;
+x_traj_cl = zeros(4, t0(end)/PERIOD);
+t_cl = zeros(1, t0(end)/PERIOD);
+t_start = tic;
+t_nom = 0;
+t_act = 0;
+while t_act < t0(end)
+    % Wait for the 
+    while toc(t_start) < t_nom; end
+    t_nom = t_nom + PERIOD;
+    % Get state
+    [theta, theta_dot, enabled, homed, estop, limit, t_limit] = interface.sendPacket(interface.CMD_NULL, 0);
+    x = interface.ConvertRawState([theta theta_dot]');
+    x = [x(1:2); x(4:5)];
+    t_act = toc(t_start);
+    torque = u_cl_fun(t_act, x) * (interface.PULLEY_RAD*.001);
+%     torque = u_ol(t_act, x) * (interface.PULLEY_RAD*.001);
+%     disp([num2str(t_act) ' [' num2str(x') '] ' num2str(torque)]);
+    interface.sendPacket(interface.CMD_TORQUE, torque); 
+    x_traj_cl(:, i) = x;
+    t_cl(i) = t_act;
+    i = i + 1;
+end
+interface.sendPacket(interface.CMD_DISABLE, 0);
+interface.delete();
+
+
+disp('Plot system response comparison');
+% Plot comparison of state trajectories
+plotTrajComp({t0, t0, t_cl}, {xnom, x_traj_ol, x_traj_cl}, 2, 2, ...
+    [1 2 3 4], {':k', 'b', 'm'}, 'Double pendulum cart', ...
+    {'q1', 'q2', 'q1 dot', 'q2 dot'}, {'Nominal', 'Open loop', 'Closed loop'});
+% Input force trajectories
+% plotTrajComp({t0, t_vect_ol, t_vect_cl}, {unom, u_traj_ol, u_traj_cl}, 1, 1, ...
+%     [1], {':k', 'b', 'm'}, 'Pendulum cart (point mass)', ...
+%     {'u'}, {'Nominal', 'Open loop', 'Closed loop'}); %#ok<NBRAK>
+% plotTrajComp({t0, t_vect_cl}, {unom, u_traj_cl}, 1, 1, ...
+%     [1], {'b', 'm'}, 'Pendulum cart (point mass)', ...
+%     {'u'}, {'Open loop', 'Closed loop'}); %#ok<NBRAK>

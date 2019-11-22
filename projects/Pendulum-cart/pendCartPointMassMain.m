@@ -30,14 +30,17 @@ xf = [0 pi 0 0]';
 % guess.traj(4,:) = (pi/guess.T)*ones(1, nPoints);
 % guess.u = zeros(1, nPoints);
 % guess = 0;
-guess = 'pendulumCartPointMass_80_dircol_1usq_100uMx_(2)';
+% guess = 'pendulumCartPointMass_80_dircol_1usq_100uMx_(2)';
 
+guess = 'pendulumCartPointMass_30_dircol_1usq_100uMx';
 
 xLims = [-2*.8 -2*pi -Inf -Inf; 2*.8 2*pi Inf Inf]';
 % xLims = [-2*.8 -Inf -Inf -Inrf; 2*.8 Inf Inf Inf]';
-uMax = 20;
-tLims = [.1 5];
+uMax = 100;
+tLims = [2 2];
 % tLims = [.1 5];
-cost.u = 0;%1/nPoints;
-cost.T = 1;
-[traj, u, T, param, exitflag, output] = trajOpt2(sys, method, gradients, cost, nPoints, x0, xf, guess, xLims, uMax, tLims);
+cost.u = 1;%1/nPoints;
+cost.T = 0;
+cost.accSmooth = 0;
+cost.uSmooth = 0;
+[traj, u, T, param, exitflag, output] = trajOpt(sys, method, gradients, cost, nPoints, x0, xf, guess, xLims, uMax, tLims);
