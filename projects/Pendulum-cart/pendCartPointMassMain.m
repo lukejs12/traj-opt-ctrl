@@ -1,4 +1,4 @@
-clear all;
+clc; clear all;
 load('pendulumCartPointMassSys.mat', 'sys');
 
 % p.g = 9.81;
@@ -16,14 +16,15 @@ load('pendulumCartPointMassSys.mat', 'sys');
 % return
 
 p.m1 = 2.0; p.m2 = 0.5; p.g = 9.81; p.l = 0.5; % p.b = 0;
+disp(['Pendulum inertia: ' num2str(p.m2*p.l^2) ' kg m2']);
 sys.param = p;
 
 method = 'dircol';
-gradients = 'analytic'; % solvergrads/centraldiff/analytic
-nPoints = 80;
+gradients = 'centraldiff'; % solvergrads/centraldiff/analytic
+nPoints = 30;
 x0 = [0 0 0 0]';
 % xf = [0.8 pi 0 0]';
-xf = [0 pi 0 0]';
+xf = [0.8 pi 0 0]';
 
 % guess.traj = (xf-x0)*linspace(0, 1, nPoints);
 % guess.T = 3;

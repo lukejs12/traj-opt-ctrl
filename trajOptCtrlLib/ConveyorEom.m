@@ -1,0 +1,16 @@
+function x_dot = ConveyorEom(t, x, u, param)
+Fx = param.Fx;
+Fy = param.Fy;
+N = param.N;
+a = param.a;
+m = param.m;
+mu_0 = param.mu_0;
+mu_inf = param.mu_inf;
+v_0 = param.v_0;
+x = x(1);
+x_dot = x(3);
+y = x(2);
+y_dot = x(4);
+x_dot(1:2) = x(3:4);
+x_dot(3:4) = Conveyor_auto(Fx,Fy,N,a,m,mu_0,mu_inf,v_0,x_dot,y_dot);
+x_dot = x_dot';

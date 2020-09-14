@@ -5,9 +5,10 @@
 %   coordVars   Cell array identifying the coordinate variables, each of
 %               which must be symbolic function of time, e.g. q(t)
 %   L           Lagrangian for system
-%   D           Dissipation function (damping)
-%   Q           Force/torque inputs, as column vector, rows corresponding
+%   D           Dissipation function (damping - experimental)
+%   U           Force/torque inputs, as column vector, rows corresponding
 %               to coordinate variable 
+%
 %   saveSys     Boolean. If true, sys structure will be saved with
 %               name sysNameSys.mat, and numeric x_dot_fun will be saved.
 %
@@ -17,14 +18,16 @@
 %       coordVars = {q1, q2};
 %       Q = [u; 0];
 %       T = .5*m1*diff(q1, 't')^2 + .5*m2*(q1 + c1*sin(diff(q2, 't')))^2 + .5*m2*(c1*cos(diff(q2, 't')))^2;
-%       U = m2*g*c1*(1-cos(q2));
-%       L = T-U;
+%       V = m2*g*c1*(1-cos(q2));
+%       L = T-V;
 %       D = .5*b*diff(q1, 't')^2;
 %       sys = deriveEom(sysName, coordVars, L, D, Q, false);
-% % function [x_dot_sym, x_dot_fun, stateVars] = deriveEom(sysName, coordVars, L, D, Q)
-function sys = deriveEom(sysName, coordVars, L, D, Q, saveSys)
+% function [x_dot_sym, x_dot_fun, stateVars] = deriveEom(sysName, coordVars, L, D, Q)
+% function sys = deriveEom(sysName, coordVars, T, V, N, mu, v_r, U, saveSys)
+function sys = deriveEom(sysName, coordVars, L, D, U, Q, saveSys)
     nCoords = length(coordVars);
     eom = evalLagrangian(L, D, coordVars);
+%     eom = evalLagrangianDissipation(T, V, N, mu, v_r, coordVars);
 
     % Create manipulator form representation of equations of motion generated
     % by evalLagrangian().
@@ -57,14 +60,14 @@ function sys = deriveEom(sysName, coordVars, L, D, Q, saveSys)
     for n = 1:length(coordVars)
         q_dot = [q_dot; diff(coordVars{n}, 't')];
     end
-    q_ddot = H\(-C*q_dot - G + Q);
+    q_ddot = H\(-C*q_dot - G + U + Q);
     q_ddot = simplify(q_ddot, 200);
     % txt = latex(q_ddot);
     % Create cell array of coordinate as strings without '(t)', and create
     % vector of coordinate variables and their time derivatives, 
     % e.q. [q1 q2 q1_dot q2_dot]
     for n = 1:nCoords
-        coordNames{n} = char(coordVars{n});
+        coordNames{n} = char(coordVars{n}); %#ok<*AGROW>
         coordNames{n} = coordNames{n}(1:end-3);
         coordNamesDot{n} = [coordNames{n} '_dot'];
     end
@@ -83,7 +86,7 @@ function sys = deriveEom(sysName, coordVars, L, D, Q, saveSys)
             % Non-differentiated variables
             q_ddot_str = strrep(q_ddot_str, [coordNames{n} '(t)'], coordNames{n});
         end
-        % q_ddot_symvar is same as q_ddot but with new variable names as outline above.
+        % q_ddot_symvar is same as q_ddot but with new variable names as outlined above.
         q_ddot_symvar(m, 1) = sym(q_ddot_str);
     end
     q_ddot_symvar = simplify(q_ddot_symvar, 300);

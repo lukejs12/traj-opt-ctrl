@@ -1,4 +1,6 @@
-% Derives the equations of motion of the Lagragian in symfun L. Matlab
+% REWRITE
+
+% Derives the equations of motion Lagragian in symfun L. Matlab
 % symbolic toolkit won't differentiate wrt to an arbitrary symfun (i.e. wrt 
 % the time derivative of the coordinate variables), so we have to use 
 % subs() to substitute in dummy variable for differentiation, then swap 
@@ -15,31 +17,44 @@
 % e.g. {x(t), theta(t)
 % Returns:
 % eoms cell array of symfun equations of motion
-function eom=evalLagrangian(L, D, coordvars)
+function eom=evalLagrangianDissipation(T, V, N, mu, v_r, coordvars)
     eom={};
     if ~iscell(coordvars)
         error('3nd argument must be cell array of coordinate variables x_i, x_i+1 etc'); 
     end
-    for j=1:length(coordvars)
+    for k=1:length(coordvars)
         % Get current coord var
-        cVar=coordvars{j};
+        cVar=coordvars{k};
         % Get time derivative of above
         % cVarDt=coordvars{j+1};
         cVarDt = diff(cVar, 't');
         if cVarDt == 0
             error('Coordinate variables must be functions of time.');
         end
-        % Calculate dL/dx_i_dot
-        dL_dx_dot=subs(diff(subs(L, cVarDt, 'tempVar') , 'tempVar'), 'tempVar', cVarDt);
+        % Calculate dT / dq_k_dot
+        dT_dq_k_dot = subs(diff(subs(T, cVarDt, 'tempVar'), 'tempVar'), 'tempVar', cVarDt);
         % Now differentiate wrt time
-        ddt_dL_dx_dot=diff(dL_dx_dot, 't');
-        % dL_dx
-        dL_dx=subs( diff(subs(L, cVar, 'dVar'), 'dVar'), 'dVar', cVar);
-        % Viscous damping - dD/Dx_i 
-        dD_dx_dot=subs(diff(subs(D, cVarDt, 'tempVar') , 'tempVar'), 'tempVar', cVarDt);
+        ddt_dT_dq_k_dot = diff(dT_dq_k_dot, 't');
+        % dT_dq_k
+        dT_dq_k = subs( diff(subs(T, cVar, 'dVar'), 'dVar'), 'dVar', cVar);
+        % dV/dq_k
+        dV_dq_k = subs( diff(subs(V, cVar, 'dVar'), 'dVar'), 'dVar', cVar); %#ok<*NASGU>
+        
+        % Dissipation function
+        % Normal force
+        N_k = N{k};
+        % Friction function
+        mu_k = mu{k};
+        % Sliding velocity
+        v_r_k = v_r{k};
+        % Non conservative force for this variable
+        Q_k = -N_k*mu_k(v_r_k)*subs(diff(subs(v_r_k, cVarDt, 'tempVar'), 'tempVar'), 'tempVar', cVarDt);
+       
+% %         % Viscous damping - dD/Dx_i 
+% %         dD_dx_dot=subs(diff(subs(D, cVarDt, 'tempVar') , 'tempVar'), 'tempVar', cVarDt);
         % Assemble final equation
-        eq=ddt_dL_dx_dot - dL_dx + dD_dx_dot;
-        eom{j}=simplify(eq); %#ok<AGROW>
+        eq=ddt_dT_dq_k_dot - dT_dq_k + dV_dq_k - Q_k;
+        eom{k}=simplify(eq); %#ok<AGROW>
     end
 end
 

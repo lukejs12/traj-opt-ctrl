@@ -1,15 +1,20 @@
 clear all;
+clc;
 load('SinglePendulumCartSys.mat', 'sys');
 
 p.m1 = 0.24463;
-p.b1 = 3;
-
-p.c2 = 0.13248;
+p.c2 = 0.16951;
 p.l2 = 0.3;
-p.m2 = 0.09465;
-p.b2 = 0.0035;
-p.I2 = 0.00353067843;
+p.m2 = 0.12038;
+p.I2 = 0.00246335160;
 p.g = 9.81;
+gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
+gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
+p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
+p.g2_1 = gamma_2(1); p.g2_2 = gamma_2(2); p.g2_3 = gamma_2(3);
+p.g2_4 = gamma_2(4); p.g2_5 = gamma_2(5); p.g2_6 = gamma_2(6);
+
 sys.param = p;
 
 % % % If parameters change, run these two lines to update gradient function
@@ -21,29 +26,20 @@ sys.param = p;
 
 method = 'dircol';
 gradients = 'centraldiff'; % solvergrads/centraldiff/analytic
-nPoints = 80;
-x0 = [0 0 0 0]';
-% xf = [0.8 pi 0 0]';
-xf = [0 pi 0 0]';
-
-% guess.traj = (xf-x0)*linspace(0, 1, nPoints);
-% guess.T = 3;
-% guess.traj(4,:) = (pi/guess.T)*ones(1, nPoints);
-% guess.u = zeros(1, nPoints);
-[guess.traj, guess.u, guess.T, ~, ~] = loadTrajectory('SinglePendulumCart_30_dircol_1usq_20uMx_(3)', nPoints);
+nPoints = 160;
+x0 = [-0.3 0 0 0]';
+xf = [0.3 pi 0 0]';
+[guess.traj, guess.u, guess.T, ~, ~] = loadTrajectory('Swingup40', nPoints);
 % guess = 0;
-% guess = 'pendulumCartPointMass_80_dircol_1usq_100uMx_(2)';
+xLims = [-0.4 -2*pi -Inf -Inf; 0.4 2*pi Inf Inf]';
 
-
-xLims = [-0.5 -pi -Inf -Inf; 0.5 2*pi Inf Inf]';
-% xLims = [-2*.8 -Inf -Inf -Inrf; 2*.8 Inf Inf Inf]';
-uMax = 10;
-tLims = [5 5];
-% tLims = [.1 5];
-cost.u = 1;%1/nPoints;
+uMax = 30;
+tLims = [1.5 1.5];
+cost.u = 1;
 cost.T = 0;
 cost.accSmooth = 0;
-cost.uSmooth = 1;
+cost.uSmooth = 0;
+
 [traj, u, T, param, exitflag, output] = trajOpt(sys, method, gradients, cost, nPoints, x0, xf, guess, xLims, uMax, tLims);
 % autosaveTrajectory
 t = linspace(0, T, nPoints);
@@ -58,3 +54,5 @@ plot(t, u);
 ylabel('u (N)');
 grid on;
 xlabel('t (s)');
+
+AnimPendulumCart(traj, T, p);

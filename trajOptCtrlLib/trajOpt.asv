@@ -1,6 +1,5 @@
-function [traj, u, T, param, exitflag, output, timeStop] = trajOpt(sys, method, gradType, cost, nPoints, x0, xf, guess, xLims, uMax, tLims)
+function [traj, u, T, param, exitflag, output] = trajOpt(sys, method, gradType, cost, nPoints, x0, xf, guess, xLims, uMax, tLims)
     close all; clear functions;
-    clear costfun; % Doesn't seem to be happening.
     
     % System mechanics properties
     param.physProp = orderfields(sys.param);
@@ -75,9 +74,9 @@ function [traj, u, T, param, exitflag, output, timeStop] = trajOpt(sys, method, 
     
     options = optimoptions(@fmincon, ...
         'Algorithm', 'interior-point', ...     %'sqp'); , 'interior-point',
-        'TolFun', 1e-6, ...         % 1e-12
-        'TolCon', 1e-6, ...         % 1e-12
-        'TolX', 1e-6, ...           % 1e-12
+        'TolFun', 1e-12, ...         %         'TolX', 1e-6, ...
+        'TolCon', 1e-12, ...
+        'TolX', 1e-12, ...
         'MaxFunEvals', 10000000, ...
         'UseParallel','always', ...
         'Display', 'iter-detailed', ...
@@ -88,6 +87,7 @@ function [traj, u, T, param, exitflag, output, timeStop] = trajOpt(sys, method, 
     if useGrads
         options = optimoptions(options, ...
             'GradObj', 'on', ...
+            'DerivativeCheck', 'on', ...
             'GradConstr','on' ...
         );
 %             'DerivativeCheck', 'on', ...
@@ -109,9 +109,6 @@ end
 function [cost, grad] = costfun(decVars, param)
     persistent R S
     
-%     if(~isempty(R))
-%         [m, n] = size(R);
-%         if
     if isempty(R)
         % Second derivative of u
         % Create R
@@ -129,7 +126,7 @@ function [cost, grad] = costfun(decVars, param)
         S = A.'*A;
     end
 
-    x = decVars(param.xIdx(1):param.xIdx(2))';
+    x = reshape(decVars(param.xIdx(1):param.xIdx(2)), param.nStates, param.nKnotPoints);
     u = decVars(param.uIdx(1):param.uIdx(2))';
     T = decVars(param.tIdx);
     cost = param.cost.u*sum(u.^2) + param.cost.accSmooth*x.'*S*x + param.cost.uSmooth*u'*R*u + param.cost.T*T^2;
@@ -150,7 +147,7 @@ function plotPhaseDiagram(x, u, param)
     else
         callCount = callCount+1;
     end
-    if callCount == 1 || ~rem(callCount, 10)
+    if ~(callCount == 1) && rem(callCount, 10) == 0
         for n = 1:nStates/2
             tStr = ['q' num2str(n)];
             subplot(nStates/2+1, 1, n);

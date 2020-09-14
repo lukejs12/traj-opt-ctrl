@@ -3,7 +3,7 @@ syms m b q1(t) u
 sysName = 'Cart';
 coordVars = {q1};
 
-T = .5*b*diff(q1, 't')^2;
+T = .5*m*diff(q1, 't')^2;
 V = 0;
 D = .5*b*diff(q1, 't')^2;
 L = T - V;
