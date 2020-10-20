@@ -12,7 +12,10 @@ p.l2 = 0.3;
 p.m2 = 0.12038;
 p.I2 = 0.00246335160;
 p.g = 9.81;
-gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
+% Pre-lockdown:
+% gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
+% Re tested 18/10/20:
+gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
 gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
 p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
 p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
@@ -37,7 +40,7 @@ p.g2_4 = gamma_2(4); p.g2_5 = gamma_2(5); p.g2_6 = gamma_2(6);
 % return;
 
 %% Load trajectory 
-[xnom, unom, T, param, tmp] = loadTrajectory('Swingup160.mat');
+[xnom, unom, T, param, tmp] = loadTrajectory('Swingup160_181020.mat');
 [~, nPoints] = size(xnom);
 h = T/(nPoints-1);
 
@@ -92,7 +95,7 @@ sys.param = p;
 
 % Also work well
 lqr.Q = diag([.05 .5 .05 .1]);
-lqr.R = 0.1;
+lqr.R = 0.08;
 lqr.Q_f = diag([0 0 0 0]);
 
 % % EXPERIMENTAL
@@ -134,9 +137,9 @@ disp('');
 input('Ready - hit [return] to proceed (system will move)');
 % Follow the trajectory with closed loop TV-LQR
 disp('CL controller');
-[t_traj_cl, x_traj_cl, u_traj_cl] = interface.followTrajectory(xnom, T, u_cl_fun, 500);
+[t_traj_cl, x_traj_cl, u_traj_cl] = interface.followTrajectory(xnom, T, u_cl_fun, 2000);
 
-% % Open loop controller
+% Open loop controller
 % disp('OL controller');
 % [t_traj_ol, x_traj_ol, u_traj_ol] = interface.followTrajectory(xnom, T, u_ol, 500);
 

@@ -105,7 +105,7 @@ function sys = deriveEom(sysName, coordVars, L, D, U, Q, saveSys)
     for cVar = symvar(q_ddot)
         if ~strcmp(char(cVar), 't') && ~strcmp(char(cVar), 'u')
             functext{end+1} = [char(cVar) ' = param.' char(cVar) ';']; 
-        end;
+        end
     end
     for cVar = 1:nCoords
         stateVarName = char(coordVars{cVar});

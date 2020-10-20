@@ -121,33 +121,6 @@ function xu = xuOft(t, xnom, unom, tspan, system)
     xu = [x; u];
 end
 
-% USES CHEBFUN:
-% function u = u_lqr(t, x, Ktraj, tIdxFun)
-%     % Expects K to be a chebfun polynomial representation of lqr gains
-%     % Same for x0 (nominal state trajectory) and u0 (nominal force trajectory)
-% %     u_nom = u0(tIdx(t));
-% %     x_nom = x0(tIdx(t));
-%     persistent K tIdx
-%     
-%     if nargin > 2
-% %         x0 = xtraj;
-% %         u0 = utraj;
-%         K = Ktraj;
-%         tIdx = tIdxFun;
-%         u = 0;
-%         return;
-%     end
-%     xu = xuOft(t);
-%     x_nom = xu(1:end-1);
-%     u_nom = xu(end);
-%     Kn = K(tIdx(t));
-%     x_bar = x - x_nom;
-%     u_bar = -Kn*x_bar;
-%     u = u_bar + u_nom;
-% %     disp(['K: ' num2str(Kn) ', u0: ' num2str(u_nom), ', u~: ' num2str(u_bar) ', x~: ' num2str(x_bar')]);
-% %     fprintf('\nK: %f, u0: %f, u~: %f, x~: %f', Kn, u_nom, u_tilde, x_tilde);
-% end
-
 function u = u_lqr(t, x, Ktraj, tspan, nKnotPoints, tIdxFun)
 %     u_nom = u0(tIdx(t));
 %     x_nom = x0(tIdx(t));

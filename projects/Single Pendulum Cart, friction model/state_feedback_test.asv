@@ -1,4 +1,0 @@
-
-% Get current position
-[theta, theta_dot, enabled, homed, estop, limit, t_limit] = interface.sendPacket(interface.CMD_NULL, 0)
-interface.convertRawState([theta theta_dot]');
