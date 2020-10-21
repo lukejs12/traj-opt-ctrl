@@ -41,8 +41,35 @@ B_lin_sym = jacobian(physSys, sys.inputVars(1));  % df/du
 A_lin_fun = matlabFunction(A_lin_sym, 'Vars', {[sys.stateVars; sys.inputVars]});
 B_lin_fun = matlabFunction(B_lin_sym, 'Vars', {[sys.stateVars; sys.inputVars]});
 
+
 x = [0 pi 0 0]';
 u = 0;
 xu = [x; u];
-A_lin = A_lin_fun([0, pi, 0, 0, 0]')
-B_lin = B_lin
+A = A_lin_fun(xu)
+B = B_lin_fun(xu)
+C = [1 1 1 1];
+D = 0;
+
+%% Set up and compute LQR
+Q = diag([1 1 0 0]);
+R = 1;
+K = lqr(A, B, Q, R);
+
+%% Create closed-loop system
+sys = ss((A - B*K), B, C, D);
+
+%% Simulate response
+t = 0:0.01:10
+x0 = [0.1 pi 0 0]';
+[y, t, x] = initial(sys, x0, t);
+% initial(sys, x0, t);
+
+%% Plot
+figure;
+subplot(2, 1, 1);
+plot(t, x(:, 1));
+ylabel('Cart position');
+subplot(2, 1, 2);
+plot(t, x(:, 2));
+ylabel('Pendulum angle');
+xlabel('t (s)');
