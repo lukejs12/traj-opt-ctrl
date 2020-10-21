@@ -79,11 +79,19 @@ subplot(2, 1, 2);
 plot(t, x(:, 2));
 ylabel('Pendulum angle');
 xlabel('t (s)');
-mtit('Linearized model with transposed coordinate system');
+shg('Linearized model with transposed coordinate system');
 
 %% Simulate a different way to check understanding
+% x_dash = @(x) x-[0 pi 0 0]';
+% ode = @(t, x) sys.x_dot_fun(t, x_dash(x), -K*x_dash(x), sys.param);
 ode = @(t, x) sys.x_dot_fun(t, x, -K*(x - [0 pi 0 0]'), sys.param);
+% ode = @(t, x) sys.x_dot_fun(t, x, 0, sys.param);
 [t, x] = ode45(ode, [0 t(end)], x0 + [0 pi 0 0]');
+% [t, x] = ode45(ode, [0, t(end)], [0, 170*pi/180 0 0]');
+% figure; hold on;
+% plot(t, x(:, 1), 'b');
+% plot(t, x(:, 2), 'r');
+% legend('cart pos', 'pendulum ang');
 f = figure;
 subplot(2, 1, 1);
 plot(t, x(:, 1));
@@ -94,4 +102,5 @@ ylabel('Pendulum angle');
 xlabel('t (s)');
 mtit(f, 'Non-linear model with original coordinate system');
 
-disp(['K: ' num2str(K)])
+% phi = theta + pi;
+% theta = phi - pi;
