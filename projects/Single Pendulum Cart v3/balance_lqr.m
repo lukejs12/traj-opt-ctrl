@@ -16,8 +16,10 @@ p.I2 = 0.00246335160;
 p.g = 9.81;
 % 18/10/20 Measured after re-adjusting v bearings:
 gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
-% Measured pre lockdown:
-gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+% % Measured pre lockdown:
+% gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+% Measured 25/10/20:
+gamma_2 = [0.001285313      160.3206      82.04419  0.0004192054  9.364404e-07  0.0006945904];
 p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
 p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
 p.g2_1 = gamma_2(1); p.g2_2 = gamma_2(2); p.g2_3 = gamma_2(3);
@@ -56,8 +58,12 @@ C = [1 1 1 1];
 D = 0;
 
 %% Set up and compute LQR
-Q = diag([10 1 0 0]);
-R = 1;
+% Q = diag([10 1 0 0]);
+% Q = diag([10 1 0.5 0.5]);
+Q = diag([10 5 5 5]);
+% R = 1;
+R = 0.125/2;
+
 K = lqr(A, B, Q, R);
 
 %% Create closed-loop system
@@ -79,19 +85,11 @@ subplot(2, 1, 2);
 plot(t, x(:, 2));
 ylabel('Pendulum angle');
 xlabel('t (s)');
-shg('Linearized model with transposed coordinate system');
+mtit('Linearized model with transposed coordinate system');
 
 %% Simulate a different way to check understanding
-% x_dash = @(x) x-[0 pi 0 0]';
-% ode = @(t, x) sys.x_dot_fun(t, x_dash(x), -K*x_dash(x), sys.param);
 ode = @(t, x) sys.x_dot_fun(t, x, -K*(x - [0 pi 0 0]'), sys.param);
-% ode = @(t, x) sys.x_dot_fun(t, x, 0, sys.param);
 [t, x] = ode45(ode, [0 t(end)], x0 + [0 pi 0 0]');
-% [t, x] = ode45(ode, [0, t(end)], [0, 170*pi/180 0 0]');
-% figure; hold on;
-% plot(t, x(:, 1), 'b');
-% plot(t, x(:, 2), 'r');
-% legend('cart pos', 'pendulum ang');
 f = figure;
 subplot(2, 1, 1);
 plot(t, x(:, 1));
@@ -102,5 +100,4 @@ ylabel('Pendulum angle');
 xlabel('t (s)');
 mtit(f, 'Non-linear model with original coordinate system');
 
-% phi = theta + pi;
-% theta = phi - pi;
+disp(['K: ' num2str(K)])

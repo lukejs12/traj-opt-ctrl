@@ -59,12 +59,12 @@ title('Modelled friction coefficient');
 ode = @(t, x, b) [x(2); (1/m)*(u(t)-b*x(2))];
 b = optFit(ode, 8, t_traj, x_traj, {'b'});
 
-return;
+% return;
 
 %%% Now test new model on real system %%%
 
 % Forcing function
-u = @(t, x) 7*sin(2*pi.*t);
+u = @(t, x) 6*sin(2*pi.*t);
 T = 3;
 
 % Simulate with viscous damping-only model

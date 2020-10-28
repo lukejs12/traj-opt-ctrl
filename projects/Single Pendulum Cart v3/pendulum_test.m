@@ -5,24 +5,24 @@ clc;
 disp('Loading system model');
 load('SinglePendulumCartSys.mat', 'sys');
 
-% % 'Correct' parameters - CAD/measurement/fitting
-% p.m1 = 0.24463;
-% p.c2 = 0.16951;
-% p.l2 = 0.3;
-% p.m2 = 0.12038;
-% p.I2 = 0.00246335160;
-% p.g = 9.81;
-% % % Pre-lockdown:
-% % gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
-% % % Re tested 18/10/20:
-% % gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
-% % Measured 22/10/20 after v-bearing adjustment:
-% gamma_1 = [0.043248363481102 3.575596948960445 3.709365047843353 3.059355227591168 5.240058486881689 0];
-% gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
-% p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
-% p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
-% p.g2_1 = gamma_2(1); p.g2_2 = gamma_2(2); p.g2_3 = gamma_2(3);
-% p.g2_4 = gamma_2(4); p.g2_5 = gamma_2(5); p.g2_6 = gamma_2(6);
+% 'Correct' parameters - CAD/measurement/fitting
+p.m1 = 0.24463;
+p.c2 = 0.16951;
+p.l2 = 0.3;
+p.m2 = 0.12038;
+p.I2 = 0.00246335160;
+p.g = 9.81;
+% % Pre-lockdown:
+% gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
+% % Re tested 18/10/20:
+% gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
+% Measured 22/10/20 after v-bearing adjustment:
+gamma_1 = [0.043248363481102 3.575596948960445 3.709365047843353 3.059355227591168 5.240058486881689 0];
+gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
+p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
+p.g2_1 = gamma_2(1); p.g2_2 = gamma_2(2); p.g2_3 = gamma_2(3);
+p.g2_4 = gamma_2(4); p.g2_5 = gamma_2(5); p.g2_6 = gamma_2(6);
 
 % x0 = [0.0 0 0 0]';
 % tspan = [0 2];
@@ -42,7 +42,7 @@ load('SinglePendulumCartSys.mat', 'sys');
 % return;
 
 %% Load trajectory 
-[xnom, unom, T, param, tmp, p_traj] = loadTrajectory('Swingup160_271020_2.mat');
+[xnom, unom, T, param, tmp, p_traj] = loadTrajectory('Swingup160_221020.mat');
 [~, nPoints] = size(xnom);
 h = T/(nPoints-1);
 
@@ -52,7 +52,7 @@ x0 = xnom(:, 1);
 
 %% Add pause at end 
 pauseAtEnd = false;
-if pauseAtEnd
+if pauseAtEnd == true
     % Add a pause at end of trajectory
 
     % Duration of pause in seconds
@@ -81,7 +81,7 @@ syms u;
 sys.inputVars = u; % Needed for LQR. Need to resolve better.
 % sys.param = p;
 % Use physical parameters saved with trajectory
-sys.param = p_traj;
+sys.param = p;
 
 
 % Create LQR structure
@@ -102,19 +102,10 @@ sys.param = p_traj;
 % lqr.R = 0.08;
 % lqr.Q_f = diag([0 0 0 0]);
 
-% % EXPERIMENTAL
-% lqr.Q = diag([10 20 0 0]);
-% lqr.R = 1;
-% lqr.Q_f = diag([0 0 5 5]);
-
-% lqr.Q = diag([10 10 .1 .1]);
-% lqr.R = 1;
-% lqr.Q_f = diag([0 0 10 10]);
-
-lqr.Q = diag([1 5 0.5 0.5]);
-lqr.R = 0.5;
-lqr.Q_f = diag([1 5 1 1]);
-
+% EXPERIMENTAL
+lqr.Q = diag([10 20 0 0]);
+lqr.R = 1;
+lqr.Q_f = diag([0 0 5 5]);
 
 lqr.nSteps = nPoints; % Create a gain for every knot point
 % Get time varying LQR controller
@@ -150,20 +141,9 @@ disp('');
 input('Ready - hit [return] to proceed (system will move)');
 % Follow the trajectory with closed loop TV-LQR
 disp('CL controller');
-[t_traj_cl, x_traj_cl, u_traj_cl, freq] = interface.followTrajectory(xnom, T, u_cl_fun, 1000);
+[t_traj_cl, x_traj_cl, u_traj_cl, freq] = interface.followTrajectory(xnom, T, u_cl_fun, 1200);
 
-% Trim empty elements from trajectories
-for i = 2:length(t_traj_cl)
-    if t_traj_cl(i) == 0
-        i = i-1;
-        break; 
-    end
-end
-t_traj_cl = t_traj_cl(1:i);
-x_traj_cl = x_traj_cl(:, 1:i);
-u_traj_cl = u_traj_cl(1:i);
-
-balance_upright = false;
+balance_upright = true;
 if balance_upright
     % Stay balanced for a bit
     % interface.stateFeedback([-8.94427 64.1788 0 -29.2822 9.92029 0 0]', 5, 1000)
@@ -173,11 +153,16 @@ if balance_upright
     % Splice the equilibrium trajectory on to the closed loop swing up
     % trajectory
     return
-    
-    t_traj_equib = t_traj_equib + t_traj_cl(end);
-    t_traj_cl = [t_traj_cl t_traj_equib];
-    x_traj_cl = [x_traj_cl x_traj_equib([1 2 4 5],:)];
-    u_traj_cl = [u_traj_cl u_traj_equib];
+    for i = 2:length(t_traj_cl)
+        if t_traj_cl(i) == 0
+            i = i-1;
+            break; 
+        end
+    end
+    t_traj_equib = t_traj_equib + t_traj_cl(i);
+    t_traj_cl = [t_traj_cl(1:i) t_traj_equib];
+    x_traj_cl = [x_traj_cl(:, 1:i) x_traj_equib([1 2 4 5],:)];
+    u_traj_cl = [u_traj_cl(:, 1:i) u_traj_equib];
     
     % % Ditto for the nominal trajectories
     % n = length(x_traj_equib);
@@ -187,10 +172,11 @@ end
 
 
 
-% % Open loop controller
+% Open loop controller
 % disp('OL controller');
-% [t_traj_ol, x_traj_ol, u_traj_ol] = interface.followTrajectory(xnom, T, u_ol, 200);
-% % interface.delete();
+% [t_traj_ol, x_traj_ol, u_traj_ol] = interface.followTrajectory(xnom, T, u_ol, 1300);
+% interface.stateFeedback([-8.94427 64.1788 0 -29.2822 9.92029 0 0]', 2, 1000)
+% % % interface.delete();
 
 % disp('Plot system response comparison');
 % % Plot comparison of state trajectories
@@ -210,7 +196,7 @@ plotTrajComp({tnom, t_traj_cl}, {xnom, x_traj_cl}, 2, 2, ...
 plotTrajComp({tnom, t_traj_cl}, {unom, u_traj_cl}, 1, 1, ...
     [1], {':k', 'm'}, 'Cart system', ...
     {'u'}, {'Nominal', 'Closed loop'}); %#ok<NBRAK>
-AnimPendulumCart(x_traj_cl, tnom(end), p_traj);
+% AnimPendulumCart(x_traj_cl, tnom(end), p);
 
 % % Plot comparison of open loop state trajectories
 % plotTrajComp({tnom, t_traj_ol}, {xnom, x_traj_ol}, 2, 2, ...

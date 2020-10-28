@@ -5,7 +5,7 @@ function saveTrajectory(matFile)
 % Horrible way to do this, but need to think about how I'm going to package
 % optimized trajectory solutions before I sort this out.
 
-fStr = ['save(''' matFile ''', ''traj'', ''u'', ''T'', ''param'', ''output'');'];
+fStr = ['save(''' matFile ''', ''traj'', ''u'', ''T'', ''param'', ''output'', ''p'');'];
 evalin('caller', fStr);
 
 % CODE TO SAVE METADATA - REQUIRES EXCEL

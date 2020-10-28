@@ -1,4 +1,4 @@
-clear all;
+% clear all;
 clc;
 load('SinglePendulumCartSys.mat', 'sys');
 
@@ -6,13 +6,30 @@ p.m1 = 0.24463;
 p.c2 = 0.16951;
 p.l2 = 0.3;
 p.m2 = 0.12038;
-p.I2 = 0.00246335160;
+p.I2 = 0.00246335160;   % About COM
 p.g = 9.81;
-% 18/10/20 Measured after re-adjusting v bearings:
-gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
-% Measured pre lockdown:
-% gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
-gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+
+
+% Measured 22/10/20 after v-bearing adjustment:
+gamma_1 = [0.043248363481102 3.575596948960445 3.709365047843353 3.059355227591168 5.240058486881689 0];
+
+% With slip rings
+if false
+    % % 18/10/20 Measured after re-adjusting v bearings:
+    % gamma_1 = [ 1.3947    4.4948    1.8766    2.2553    3.9928    0.0294];
+    % Measured pre lockdown:
+    % gamma_1 = [1.4022, 4.504, 1.8617, 2.2751, 4.0085, .02974];
+    % gamma_2 = [0.050511, 0.0072542, 0.56505, 0.040219, 0.89881, 5.9566e-5];
+    % Measured 25/10/20 - see diary notes:
+    gamma_2 = [0.001285313      160.3206      82.04419  0.0004192054  9.364404e-07  0.0006945904];
+end
+% No slip rings in cart-pendulum joint
+if true
+    % Viscous damping only model
+    gamma_2 = [0 0 0 0 0 0.00042253];
+    % p.m1 = ...? Check!
+end
+    
 p.g1_1 = gamma_1(1); p.g1_2 = gamma_1(2); p.g1_3 = gamma_1(3);
 p.g1_4 = gamma_1(4); p.g1_5 = gamma_1(5); p.g1_6 = gamma_1(6);
 p.g2_1 = gamma_2(1); p.g2_2 = gamma_2(2); p.g2_3 = gamma_2(3);
@@ -30,11 +47,13 @@ sys.param = p;
 method = 'dircol';
 gradients = 'centraldiff'; % solvergrads/centraldiff/analytic
 nPoints = 160;
-x0 = [-0.3 0 0 0]';
-xf = [0.3 pi 0 0]';
+x0 = [0 0 0 0]';
+xf = [0 pi 0 0]';
+% [guess.traj, guess.u, guess.T, ~, ~] = loadTrajectory('Swingup40', nPoints);
+% xLims = [-0.4 -2*pi -Inf -Inf; 0.4 2*pi Inf Inf]';
 [guess.traj, guess.u, guess.T, ~, ~] = loadTrajectory('Swingup40', nPoints);
-% guess = 0;
 xLims = [-0.4 -2*pi -Inf -Inf; 0.4 2*pi Inf Inf]';
+
 
 uMax = 30;
 tLims = [1.5 1.5];

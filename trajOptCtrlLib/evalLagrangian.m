@@ -34,14 +34,21 @@ function eom=evalLagrangian(L, D, coordvars)
         % Now differentiate wrt time
         ddt_dL_dx_dot=diff(dL_dx_dot, 't');
         % dL_dx
-        dL_dx=subs( diff(subs(L, cVar, 'dVar'), 'dVar'), 'dVar', cVar);
+        % If substituting in a dummy variable for a time dependent
+        % function, derivatives of the time dependent variable are lost,
+        % e.g. syms q(t); T = q*diff(q, t); subs(T, q, 'temp') == 0. So
+        % substitute in dummy variable for time derivative function first, 
+        % then substitute for the function of time. 'tVar' = temporary
+        % variable. So:
+        dL_dx = subs(subs(diff(subs(subs(L, cVarDt, 'tVarDt'), cVar, 'tVar'), 'tVar'), 'tVarDt', cVarDt), 'tVar', cVar);
+%         dL_dx=subs( diff(subs(L, cVar, 'dVar'), 'dVar'), 'dVar', cVar);
         % Viscous damping - dD/Dx_i 
         dD_dx_dot=subs(diff(subs(D, cVarDt, 'tempVar') , 'tempVar'), 'tempVar', cVarDt);
         % Assemble final equation
-        eq=ddt_dL_dx_dot - dL_dx + dD_dx_dot;
+        eq=simplify(ddt_dL_dx_dot - dL_dx + dD_dx_dot, 500);
         eom{j}=simplify(eq); %#ok<AGROW>
     end
-end
+end     
 
 
 % syms L x(t) x_dot(t) theta(t) theta_dot(t) m I g

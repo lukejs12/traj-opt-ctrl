@@ -1,8 +1,11 @@
-function [trajOut, uOut, T, param, optOutput] = loadTrajectory(matFile, nPointsOut)
+function [trajOut, uOut, T, param, optOutput, p] = loadTrajectory(matFile, nPointsOut)
     % loadTrajectory(matFile) loads the trajectory from a previous trajectory
     % optimization saved in matFile and resamples it to fit nGridPoints grid
     % points. 
-    load(matFile, 'traj', 'u', 'T', 'param', 'output');
+    load(matFile, 'traj', 'u', 'T', 'param', 'output', 'p');
+    if ~exist('p', 'var')
+        p = 0;
+    end
     [nStates, nPointsIn] = size(traj);
     if nargin < 2
         % No interpolation

@@ -1,0 +1,11 @@
+% Differentiate position to get velocity, compare to telemetry
+q2_dot = zeros(1, length(x_traj_cl)-1);
+for i = 1:length(x_traj_cl)-1
+    q2_dot(i) = (x_traj_cl(2, i+1) - x_traj_cl(2, i))/(t_traj_cl(i+1) - t_traj_cl(i));
+end
+figure
+plot(t_traj_cl, x_traj_cl(4, :), t_traj_cl(1:end-1), q2_dot);
+% plot(t_traj_cl(1:end-1), q2_dot);
+% plot(t_traj_cl, x_traj_cl(4, :));
+
+% Integrate velocity to get position, compare

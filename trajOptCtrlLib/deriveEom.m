@@ -87,7 +87,7 @@ function sys = deriveEom(sysName, coordVars, L, D, U, Q, saveSys)
             q_ddot_str = strrep(q_ddot_str, [coordNames{n} '(t)'], coordNames{n});
         end
         % q_ddot_symvar is same as q_ddot but with new variable names as outlined above.
-        q_ddot_symvar(m, 1) = sym(q_ddot_str);
+        q_ddot_symvar(m, 1) = str2sym(q_ddot_str);
     end
     q_ddot_symvar = simplify(q_ddot_symvar, 300);
 
